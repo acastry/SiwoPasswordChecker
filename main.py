@@ -1,6 +1,6 @@
 class SiwoPasswordSecurityChecker():
 
-    passwords_file = "UdzyGDZK.txt"
+    passwords_file = "UdzyGDZKSOZ.txt"
 
     def __init__(self):
         self.password = ""
