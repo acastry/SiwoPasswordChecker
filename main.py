@@ -1,7 +1,5 @@
 class SiwoPasswordSecurityChecker():
 
-    passwords_file = "UdzyGDZKSOZ.txt"
-
     def __init__(self):
         self.password = ""
         pass
@@ -50,41 +48,51 @@ class SiwoPasswordSecurityChecker():
         return self.store_passwords(passwords)
 
     def store_passwords(self, passwords):
-        with open(self.passwords_file, "w") as file:
+        with open(self.config_parser().get("password", "file"), "w") as file:
             for password in passwords:
                 file.write(password)
                 file.write('\n')
         return True
 
     def get_passwords(self):
-        with open(self.passwords_file, "r") as file:
+        with open(self.config_parser().get("password", "file"), "r") as file:
             return file.readlines()
-
-    def check_passwords(self):
-        import os.path
-        while True:
-            if not os.path.exists(self.passwords_file):
-                self.enter_passwords()
-            else:
-                for password in self.get_passwords():
-                    checking = self.password_check(password)
-                    if int(checking)>0:
-                        self.send_mail(f"Password '{password}' have been pwned {checking} times. You should change this password !")
-                break;
 
     def send_mail(self, message):
         import smtplib
 
-        sender_email = "alen@siwo.com"
-        receiver_email = "alen@siwo.com"
-        password = "your_password"
+        sender_email = self.config_parser().get("smtp", "email")
+        receiver_email = self.config_parser().get("smtp", "email")
+        password = self.config_parser().get("smtp", "password")
 
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server = smtplib.SMTP(self.config_parser().get("smtp", "smtp_host"),
+                              self.config_parser().get("smtp", "smtp_port"))
         server.starttls()
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, message)
         server.quit()
 
+    def check_passwords(self):
+        import os.path
+        while True:
+            if not os.path.exists(self.config_parser().get("password", "file")):
+                self.enter_passwords()
+            else:
+                for password in self.get_passwords():
+                    checking = self.password_check(password)
+                    if int(checking) > 0:
+                        #print(f"Password '{password}' have been pwned {checking} times. You should change this password !")
+                        self.send_mail(
+                            f"Password '{password}' have been pwned {checking} times. You should change this password !")
+                break
+
+    def config_parser(self):
+        from configparser import ConfigParser
+        config = ConfigParser()
+        config.read('config.ini')
+        return config
+
+
 if __name__ == '__main__':
-    dada = SiwoPasswordSecurityChecker()
-    dada.check_passwords()
+    main = SiwoPasswordSecurityChecker()
+    main.check_passwords()
